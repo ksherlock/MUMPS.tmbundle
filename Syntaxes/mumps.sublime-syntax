@@ -8,44 +8,55 @@ variables:
   ws: '[ \t]'
   ident: '[%A-Za-z][A-Za-z0-9]*'
 
+
 contexts:
-  prototype:
-    - include: comment
+  # prototype can't set.
+  # prototype:
+    # - include: comments
+    # - include: eol
 
   main:
+    - include: comment
+
     - match: '^{{ident}}\b'
       scope: entity.name.function
+    - include: comments
     - match: '{{ws}}+'
       set: indent
 
   indent:
+    - include: eol
     - match: ([\. ]*)
       set: stmt
 
   stmt:
-    - match: '(?i:s|set)\b'
-      scope: keyword
-      set: conditional
-
-    - match: '(?i:f|for)\b'
-      scope: keyword
-      set: stmt-for
-
-    - match: '(?i:d|do)\b'
-      scope: keyword
-      set: conditional # stmt-do
-
-
-    - match: '(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|u|use|v|view|w|write|x|xecute)\b'
-      scope: keyword
-      set: conditional
-
     - include: eol
+
+    - match: '\b(?i:s|set)\b'
+      scope: keyword.set
+      set: conditional
+
+    - match: '\b(?i:f|for|i|if|e|else)\b'
+      scope: keyword.control
+      set: unconditional
+
+    - match: '\b(?i:d|do)\b'
+      scope: keyword.control
+      set: conditional
+
+
+
+    - match: '\b(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|u|use|v|view|w|write|x|xecute)\b'
+      scope: keyword
+      set: conditional
+
+    - include: dot
 
     # - match: '(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|u|use|v|view|w|write|x|xecute)\b'
     #   scope: keyword
 
   conditional:
+    - include: eol
     - match: ':'
       set: cond-expr
     - match: ' '
@@ -53,14 +64,8 @@ contexts:
     - include: eol
     - include: dot
 
-  stmt-set:
 
-    - include: eol
-    - match: ' '
-      set: expr
-    - include: dot
-
-  stmt-for:
+  unconditional:
     - include: eol
     - match: ' {2}'
       set: stmt
@@ -68,20 +73,14 @@ contexts:
       set: expr
     - include: dot
 
-  stmt-do:
-    - include: eol
-    - match: ' {2}'
-      set: stmt
-    - match: ' '
-      set: expr
-    - include: dot
 
 
   cond-expr:
+    - include: eol
     - match: \n
       scope: invalid.illegal
       set: main
-    - match: '{{ws}}'
+    - match: ' '
       set: expr
     - include: expr
 
@@ -92,15 +91,8 @@ contexts:
       scope: constant.numeric
     - match: '{{ws}}'
       set: stmt
-    - match: '(")(""|[^"\n]*)(")'
-      scope: string.quoted
+    - include: string
 
-    - match: '(")(""|[^"\n]*)(\n)'
-      captures:
-        1: string.quoted
-        2: string.quoted
-        3: invalid.illegal
-      pop: true
 
   dollar:
     - match: '\$(?i:device|ec|ecode|estack|es|et|etrap|halt|h|horolog|i|io|j|job|k|key|namespace|p|principal|q|quit|roles|st|stack|s|sy|system|storage|t|test|this|throwobjtl|tlevel|username|x|y|za|zb|zc|zchild|zeof|zeos|ze|zerror|zh|zhorolog)\b'
@@ -120,18 +112,34 @@ contexts:
     - match: '\$\$(\^?){{ident}}'
       scope: meta.function-call
 
+
+  string:
+    - match: '"'
+      scope: punctuation.definition.string.begin.mumps
+      push:
+        - meta_include_prototype: false
+        - meta_scope: string.quoted.double.mumps
+        - match: '"'
+          scope: punctuation.definition.string.end.mumps
+          pop: true
+        - match: '\n'
+          scope: invalid.illegal
+          pop: true
+
   dot:
-    - match: '.+\n'
+    - match: '.+$'
       scope: invalid.illegal.dot
       set: main
 
   eol:
-    - match: \n
+    - match: ';.*$'
+      scope: comment.line
       set: main
-      # pop: true
+    - match: '$'
+      set: main
+
 
   comment:
-    - match: ';.*\n'
+    - match: ';.*$'
       scope: comment.line
-      pop: true
 

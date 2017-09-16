@@ -1,0 +1,137 @@
+%YAML 1.2
+---
+name: MUMPS
+file_extensions: [int]
+scope: source.mumps
+
+variables:
+  ws: '[ \t]'
+  ident: '[%A-Za-z][A-Za-z0-9]*'
+
+contexts:
+  prototype:
+    - include: comment
+
+  main:
+    - match: '^{{ident}}\b'
+      scope: entity.name.function
+    - match: '{{ws}}+'
+      set: indent
+
+  indent:
+    - match: ([\. ]*)
+      set: stmt
+
+  stmt:
+    - match: '(?i:s|set)\b'
+      scope: keyword
+      set: conditional
+
+    - match: '(?i:f|for)\b'
+      scope: keyword
+      set: stmt-for
+
+    - match: '(?i:d|do)\b'
+      scope: keyword
+      set: conditional # stmt-do
+
+
+    - match: '(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|u|use|v|view|w|write|x|xecute)\b'
+      scope: keyword
+      set: conditional
+
+    - include: eol
+
+    # - match: '(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|u|use|v|view|w|write|x|xecute)\b'
+    #   scope: keyword
+
+  conditional:
+    - match: ':'
+      set: cond-expr
+    - match: ' '
+      set: expr
+    - include: eol
+    - include: dot
+
+  stmt-set:
+
+    - include: eol
+    - match: ' '
+      set: expr
+    - include: dot
+
+  stmt-for:
+    - include: eol
+    - match: ' {2}'
+      set: stmt
+    - match: ' '
+      set: expr
+    - include: dot
+
+  stmt-do:
+    - include: eol
+    - match: ' {2}'
+      set: stmt
+    - match: ' '
+      set: expr
+    - include: dot
+
+
+  cond-expr:
+    - match: \n
+      scope: invalid.illegal
+      set: main
+    - match: '{{ws}}'
+      set: expr
+    - include: expr
+
+  expr:
+    - include: eol
+    - include: dollar
+    - match: \d+
+      scope: constant.numeric
+    - match: '{{ws}}'
+      set: stmt
+    - match: '(")(""|[^"\n]*)(")'
+      scope: string.quoted
+
+    - match: '(")(""|[^"\n]*)(\n)'
+      captures:
+        1: string.quoted
+        2: string.quoted
+        3: invalid.illegal
+      pop: true
+
+  dollar:
+    - match: '\$(?i:device|ec|ecode|estack|es|et|etrap|halt|h|horolog|i|io|j|job|k|key|namespace|p|principal|q|quit|roles|st|stack|s|sy|system|storage|t|test|this|throwobjtl|tlevel|username|x|y|za|zb|zc|zchild|zeof|zeos|ze|zerror|zh|zhorolog)\b'
+      scope: variable.language
+
+
+    - match: '\$(?i:p|piece)'
+      scope: function.language
+    - match: '\$(?i:zd|zdate|zdh|zdateh|zdatetime|zdt|zdth|zdatetimeh|zt|ztime|zth|ztimeh)\b'
+      scope: function.language.date
+
+    - match: '\$(?i:zabz|zarccos|zarcsin|zarctan|zcos|zcot|zcsc|zexp|zh|zhex|zln|zlog|zpower|zsec|zsin|zsqr|ztan)\b'
+      scope: function.language.math
+
+    - match: '\$\${{ident}}\^{{ident}}'
+      scope: meta.function-call
+    - match: '\$\$(\^?){{ident}}'
+      scope: meta.function-call
+
+  dot:
+    - match: '.+\n'
+      scope: invalid.illegal.dot
+      set: main
+
+  eol:
+    - match: \n
+      set: main
+      # pop: true
+
+  comment:
+    - match: ';.*\n'
+      scope: comment.line
+      pop: true
+

@@ -32,13 +32,17 @@ contexts:
   stmt:
     - include: eol
 
-    - match: '\b(?i:s|set)\b'
-      scope: keyword.set
-      set: conditional
 
-    - match: '\b(?i:f|for|i|if|e|else)\b'
+    - match: '\b(?i:f|for|i|if)\b'
       scope: keyword.control
       set: unconditional
+
+    - match: '\b(?i:e|else)\b'
+      scope: keyword.control
+      set:
+        - match: '  '
+          set: stmt
+        - include: dot
 
     - match: '\b(?i:d|do)\b'
       scope: keyword.control
@@ -46,22 +50,44 @@ contexts:
 
 
 
-    - match: '\b(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|u|use|v|view|w|write|x|xecute)\b'
+    - match: '\b(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|s|set|u|use|v|view|w|write|x|xecute)\b'
       scope: keyword
       set: conditional
 
-    - include: dot
+    - match: '\b(?i:tc|tcommit|tro|trollback|ts|tstart)\b'
+      scope: keyword
+      set: pc
 
-    # - match: '(?i:b|break|c|close|e|else|g|goto|h|halt|hang|i|if|j|job|k|kill|l|lock|m|merge|n|new|o|open|q|quit|r|read|u|use|v|view|w|write|x|xecute)\b'
-    #   scope: keyword
+
+      # cache keywords
+    - match: '\b(?i:continue)\b'
+      scope: keyword.cache
+      set: pc
+
+    - match: '\b(?i:return|zk|zkill|zn|znspace|ztrap|zw|zwrite|zzdump|zzwrite)\b'
+      scope: keyword.cache
+      set: conditional
+
+    - match: '\b(?i:throw)\b'
+      scope: keyword.cache
+      set: unconditional
+
+
+    # post conditional, no argument.
+  pc:
+    - include: eol
+    - match: ':'
+      set: [stmt, cond-expr]
+    - match: ' '
+      set: stmt
+    - include: dot
 
   conditional:
     - include: eol
     - match: ':'
-      set: cond-expr
+      set: [expr, cond-expr]
     - match: ' '
       set: expr
-    - include: eol
     - include: dot
 
 
@@ -74,15 +100,16 @@ contexts:
     - include: dot
 
 
-
   cond-expr:
-    - include: eol
-    - match: \n
-      scope: invalid.illegal
-      set: main
+    # prevent eol/comment matching here since stack in effect.
+    - match: '$'
+      pop: true
+    - match: '(?=;)'
+      pop: true
     - match: ' '
-      set: expr
+      pop: true
     - include: expr
+
 
   expr:
     - include: eol
@@ -95,16 +122,27 @@ contexts:
 
 
   dollar:
-    - match: '\$(?i:device|ec|ecode|estack|es|et|etrap|halt|h|horolog|i|io|j|job|k|key|namespace|p|principal|q|quit|roles|st|stack|s|sy|system|storage|t|test|this|throwobjtl|tlevel|username|x|y|za|zb|zc|zchild|zeof|zeos|ze|zerror|zh|zhorolog)\b'
+    - match: '\$(?i:device|ec|ecode|estack|es|et|etrap|halt|h|horolog|i|io|j|job|k|key|namespace|p|principal|q|quit|roles|st|stack|s|sy|system|storage|t|test|this|throwobj|tl|tlevel|username|x|y|za|zb|zc|zchild|zeof|zeos|ze|zerror)\b'
       scope: variable.language
 
+    - match: '\$(?i:zh|zhorolog|zi|zio|zj|zjob|zm|zmode|zn|zname|znspace|zo|zorder|zp|zparent|zpi|zpos|zr|zreference|zs|zstorage|zts|ztimestamp|ztz|ztimezone|zt|ztrap|zv|zversion)\b'
+      scope: variable.language.cache
 
-    - match: '\$(?i:p|piece)'
+    - match: '\$(?i:a|ascii|c|char|d|data|e|extract|f|find|fn|fnumber|g|get|j|justify|l|length|na|name|n|next|o|order|p|piece|ql|qlength|sq|qsubscript|q|query|r|random|re|reverse|s|select|t|text|tr|translate|v|view)\b'
       scope: function.language
+
+    - match: '\$(?i:bit|bitcount|bitfind|bitlogic|case|classmethod|classname|compile|decimal|double|factor|i|increment|in|inumber|isobject|isvaliddouble|isvalidnum|li|list|lb|listbuild|ld|listdata|lf|listfind|lfs|listfromstring|lg|listget|ll|listlength|listnext|ls|listsame|lts|listtostring|lu|listupdate|lv|listvalid|locate|match|method|nc|nconvert|normalize|now|num|number|parameter|prefetchoff|prefetchon|property|replace|sc|sconvert|seq|sequence|sortbegin|sortend|st|stack|wa|wascii|wc|wchar|we|wextract|wf|wfind|wiswide|wl|wlength|wre|wreverse|xecute)\b'
+      scope: function.language.cache
+
+    - match: '\$(?i:zbitand|zbitcount|zbitfind|zbitget|zbitlen|zbitnot|zbitor|zbitset|zbitstr|zbitxor|zincrement|znext|zorder|zp|zprevious|zsort)\b'
+      scope: function.language.cache.legacy
+
+
+
     - match: '\$(?i:zd|zdate|zdh|zdateh|zdatetime|zdt|zdth|zdatetimeh|zt|ztime|zth|ztimeh)\b'
       scope: function.language.date
 
-    - match: '\$(?i:zabz|zarccos|zarcsin|zarctan|zcos|zcot|zcsc|zexp|zh|zhex|zln|zlog|zpower|zsec|zsin|zsqr|ztan)\b'
+    - match: '\$(?i:zabs|zarccos|zarcsin|zarctan|zcos|zcot|zcsc|zexp|zh|zhex|zln|zlog|zpower|zsec|zsin|zsqr|ztan)\b'
       scope: function.language.math
 
     - match: '\$\${{ident}}\^{{ident}}'

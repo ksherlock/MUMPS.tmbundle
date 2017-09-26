@@ -18,10 +18,27 @@ contexts:
   main:
     - include: comment
 
+    - match: '^({{ident}})(\()'
+      captures:
+        1: entity.name.function.mumps
+        2: punctuation.section.group.begin.mumps
+      set: parms
+
     - match: '^{{ident}}\b'
-      scope: entity.name.function
+      scope: entity.name.function.mumps
+
     - include: comments
     - match: '{{ws}}+'
+      set: indent
+
+  parms:
+    - match: \b{{ident}}\b
+      scope: variable.parameter.function
+    - match: \n
+      scope: invalid.illegal
+      set: main
+    - match: \)
+      scope: punctuation.section.group.end.mumps
       set: indent
 
   indent:

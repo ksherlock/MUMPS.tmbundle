@@ -1,0 +1,10 @@
+[
+    // Disable auto-pair for '
+    { "keys": ["'"], "command": "insert_snippet", "args": {"contents": "'"}, "context":
+        [{ "key": "selector", "operator": "equal", "operand": "source.mumps" }]
+    },
+    // Disable auto-pair for [
+    { "keys": ["["], "command": "insert_snippet", "args": {"contents": "["}, "context":
+        [{ "key": "selector", "operator": "equal", "operand": "source.mumps" }]
+    }
+]

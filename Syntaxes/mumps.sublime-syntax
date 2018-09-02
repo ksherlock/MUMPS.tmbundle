@@ -131,6 +131,7 @@ contexts:
   expr:
     - include: eol
     - include: dollar
+    - match: '{{ident}}'
     - match: \d+
       scope: constant.numeric
     - match: '{{ws}}'

@@ -27,7 +27,6 @@ contexts:
     - match: '^{{ident}}\b'
       scope: entity.name.function.mumps
 
-    - include: comments
     - match: '{{ws}}+'
       set: indent
 
@@ -193,13 +192,21 @@ contexts:
 
   eol:
     - match: ';.*$'
-      scope: comment.line
-      set: main
+      scope: punctuation.definition.comment.mumps
+      push:
+        - meta_include_prototype: false
+        - meta_scope: comment.line.mumps
+        - match: '\n'
+          pop: true
     - match: '$'
       set: main
 
 
   comment:
-    - match: ';.*$'
-      scope: comment.line
-
+    - match: ';'
+      scope: punctuation.definition.comment.mumps
+      push:
+        - meta_include_prototype: false
+        - meta_scope: comment.line.mumps
+        - match: '$'
+          pop: true

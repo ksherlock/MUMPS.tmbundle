@@ -20,7 +20,7 @@
 			<key>comment</key>
 			<string>uses positive look behind (leading space) and positive look ahead (space, :, or $)</string>
 			<key>match</key>
-			<string>(?&lt;=\s)(?i:[BCDEFGHIJKLMNOQRSUVWX])(?=(:|\s|$))</string>
+			<string>(?&lt;=[\s.])(?i:[BCDEFGHIJKLMNOQRSUVWX])(?=(:|\s|$))</string>
 			<key>name</key>
 			<string>keyword.mumps.short</string>
 		</dict>
